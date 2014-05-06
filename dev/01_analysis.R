@@ -118,7 +118,17 @@ emplPlot
 
 
 ############################################################################################
-###  1 - Time series unemployement chart
+###  2 - General youth unemployment by education levels
 ############################################################################################
+
+
+# http://epp.eurostat.ec.europa.eu/portal/page/portal/youth/data/database#
+# EU28 20-29Y: secondary education (52.6%), upper secondary (42.1%), tiertary (28.6%)
+
+
+############################################################################################
+###  2 - General youth unemployment by education levels
+############################################################################################
+
 
 
