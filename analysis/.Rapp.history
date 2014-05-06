@@ -1,0 +1,441 @@
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+#############################################################################################
+###		SETTINGS#
+#############################################################################################
+#
+source("~/swissinfo/_helpers/helpers.R")#
+#
+# to get eurostat data#
+library(SmarterPoland)#
+# to get World Bank data#
+library(WDI)#
+countries <- c('AT',"BE", "EL", "DE", "ES", "FI", "FR", "IT", "PT", "UK", "SE", "IE", "NL", "CH")
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+empl.data <- getEurostatRCV("yth_empl_010") #http://epp.eurostat.ec.europa.eu/portal/page/portal/youth/data/database#
+edu.data <- getEurostatRCV("yth_demo_040")  #http://epp.eurostat.ec.europa.eu/portal/page/portal/youth/data/database
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+empl.data <- getEurostatRCV("yth_empl_010") #http://epp.eurostat.ec.europa.eu/portal/page/portal/youth/data/database#
+edu.data <- getEurostatRCV("yth_demo_040")  #http://epp.eurostat.ec.europa.eu/portal/page/portal/youth/data/database
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+save(empl.data, edu.data, file = "eurostat_edu.RData")
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+# filter data#
+myfilter <- function(data, age = NULL) {#
+	data <- data[data$sex == 'T',]#
+	data <- data[data$unit == 'PC',]#
+	data$time <- as.numeric(as.character(data$time))#
+	if(!is.null(age)) data <- data[data$age == age,]#
+#
+	data[,!(names(data) %in% c('sex', 'unit'))]#
+}#
+#
+empl.data <- myfilter(empl.data)#
+empl.data <- empl.data[empl.data$time >= 2004 & empl.data$isced97 != 'NRP',]#
+#
+edu.data  <- myfilter(edu.data)
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	foo(1:10)#
+}
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	browser()#
+	foo(1:10)#
+}
+foo
+foo(1:10)
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+pdf("eduTypeVsEmployement.pdf", width = 18, height = 13)#
+#
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) +#
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}#
+dev.off()
+Q
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+countries <- c(countries, "EU28" )#
+# chart the type of edu vs unemployement by age groups#
+# get only the first and last year#
+pdf("eduTypeVsEmployement.pdf", width = 18, height = 13)#
+#
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}#
+dev.off()
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+# filter data#
+myfilter <- function(data, age = NULL) {#
+	data <- data[data$sex == 'T',]#
+	data <- data[data$unit == 'PC',]#
+	data$time <- as.numeric(as.character(data$time))#
+	if(!is.null(age)) data <- data[data$age == age,]#
+#
+	data[,!(names(data) %in% c('sex', 'unit'))]#
+}#
+#
+empl.data <- myfilter(empl.data)#
+empl.data <- empl.data[empl.data$time >= 2004 & empl.data$isced97 != 'NRP',]#
+#
+edu.data  <- myfilter(edu.data)#
+#write.csv(edu.data, "education_OECD__yth_demo_040.csv", row.names = FALSE)#
+#
+ggplot(subset(edu.data, geo %in% countries), aes(x = time, y = value, group = geo, color = geo)) +#
+  geom_line() + facet_grid(age ~ isced97, scales = "free_y")#
+countries <- c(countries, "EU28" )#
+# chart the type of edu vs unemployement by age groups#
+# get only the first and last year#
+pdf("eduTypeVsEmployement.pdf", width = 18, height = 13)#
+#
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+	browser()#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}#
+dev.off()
+year
+Q
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+# filter data#
+myfilter <- function(data, age = NULL) {#
+	data <- data[data$sex == 'T',]#
+	data <- data[data$unit == 'PC',]#
+	data$time <- as.numeric(as.character(data$time))#
+	if(!is.null(age)) data <- data[data$age == age,]#
+#
+	data[,!(names(data) %in% c('sex', 'unit'))]#
+}#
+#
+empl.data <- myfilter(empl.data)#
+empl.data <- empl.data[empl.data$time >= 2004 & empl.data$isced97 != 'NRP',]#
+#
+edu.data  <- myfilter(edu.data)#
+#write.csv(edu.data, "education_OECD__yth_demo_040.csv", row.names = FALSE)#
+#
+ggplot(subset(edu.data, geo %in% countries), aes(x = time, y = value, group = geo, color = geo)) +#
+  geom_line() + facet_grid(age ~ isced97, scales = "free_y")#
+countries <- c(countries, "EU28" )#
+# chart the type of edu vs unemployement by age groups#
+# get only the first and last year#
+pdf("eduTypeVsEmployement.pdf", width = 18, height = 13)#
+#
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+	#browser()#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}#
+dev.off()
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+		browser()#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+empl
+edu
+load("/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis/eurostat_edu.RData")
+Q
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+# filter data#
+myfilter <- function(data, age = NULL) {#
+	data <- data[data$sex == 'T',]#
+	data <- data[data$unit == 'PC',]#
+	data$time <- as.numeric(as.character(data$time))#
+	if(!is.null(age)) data <- data[data$age == age,]#
+#
+	data[,!(names(data) %in% c('sex', 'unit'))]#
+}#
+#
+empl.data <- myfilter(empl.data)#
+empl.data <- empl.data[empl.data$time >= 2004 & empl.data$isced97 != 'NRP',]#
+#
+edu.data  <- myfilter(edu.data)#
+#write.csv(edu.data, "education_OECD__yth_demo_040.csv", row.names = FALSE)#
+#
+ggplot(subset(edu.data, geo %in% countries), aes(x = time, y = value, group = geo, color = geo)) +#
+  geom_line() + facet_grid(age ~ isced97, scales = "free_y")#
+countries <- c(countries, "EU28" )#
+# chart the type of edu vs unemployement by age groups
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+		browser()#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+year
+year
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+		browser()#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+	year <- unique(c(empl$time, edu$time))#
+		browser()#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+foo
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+		browser()#
+	year <- unique(c(empl$time, edu$time))#
+#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+foo
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+		browser()#
+	year <- unique(c(empl$time, edu$time))#
+#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+		browser()#
+	year <- unique(c(empl$time, edu$time))#
+#
+	stopifnot(length(year == 1))#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+n
+n
+year
+length(year)
+n
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+		#browser()#
+	year <- unique(c(empl$time, edu$time))#
+#
+	stopifnot(length(year) == 1)#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+Q
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+		#browser()#
+	year <- unique(c(empl$time, edu$time))#
+#
+	stopifnot(length(year) == 1)#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+pdf("eduTypeVsEmployement.pdf", width = 17, height = 12)#
+#
+for (foo in c(max, min)) {#
+	empl <- empl.data[empl.data$time == foo(empl.data$time),]#
+	edu <- edu.data[edu.data$time == foo(edu.data$time),]#
+		#browser()#
+	year <- unique(c(empl$time, edu$time))#
+#
+	stopifnot(length(year) == 1)#
+	#countries <- intersect(empl$geo, edu$geo)#
+#
+	em <- empl[empl$isced97 != "TOTAL",]#
+	colnames(em)[colnames(em)=='value'] <- 'employement'#
+	ed <- edu[edu$geo %in% countries, c('geo','value', 'age','isced97')]#
+	colnames(ed)[colnames(ed)=='value'] <- 'education'#
+#
+	data <- merge(em, ed, by=c('age', 'isced97', 'geo'))#
+#
+	print(ggplot(data, aes(x = employement, y = education, label = geo)) + ggtitle(year) + #
+	  geom_point() + geom_text(aes(label=geo),hjust=0, vjust=0, size = 3, alpha = 0.5) + facet_grid(age ~ isced97))#
+}#
+dev.off()
+load("/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis/eurostat_edu.RData")
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+empl.data <- myfilter(empl.data)
+head(empl.data)
+tail(empl.data)
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+empl.data <- myfilter(empl.data)
+empl.data
+load("/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis/eurostat_edu.RData")
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+empl.data <- myfilter(empl.data)
+empl.data
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+library(slopegraph)
+empl.data
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+countries <- c(countries, "EU28", 'CH')
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+by(empl.data, empl$age, function(empl) {#
+	browser()#
+})
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+by(empl.data, empl.data$age, function(empl) {#
+	browser()#
+})
+empl
+head(empl)
+unique(empl$isced97)
+grepl('^ED', empl$isced97)
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/analysis')
+empl[empl$geo %in% countries & grepl('^ED', empl$isced97),]

@@ -1,0 +1,44 @@
+setwd('/Users/nguyendu/Google Drive/swissinfo/2014_04_29_jobApprenticeship/oecd')
+#############################################################################################
+###		SETTINGS#
+#############################################################################################
+#
+source("~/swissinfo/_helpers/helpers.R")#
+#
+#############################################################################################
+###  1 - Time series unemployement chart#
+#############################################################################################
+#
+#### A) Using WB unemployment #
+#
+library(WDI)#
+library(rCharts)#
+library(plyr)#
+#
+countries.iso2 <- c('AT', "CH", "EL", "DE", "ES", "FR", "IT", "PT", "GB" )#
+unempl <- WDI(country = c(countries, 'US', 'JP', 'BR', 'RU', 'CN'), indicator = "SL.UEM.1524.ZS",#
+  start = 1991, extra = FALSE, cache = NULL)#
+#
+#Clean up the data a bit#
+unempl <- rename(unempl, replace = c("SL.UEM.1524.ZS" = "unemployment"))#
+unempl$unemployment <- round(unempl$unemployment, 1)#
+# Create the chart#
+unemplPlot <- nPlot(#
+	unemployment ~ year,#
+	data = unempl,#
+	group = "country",#
+	type = "lineChart")#
+#
+# Add axis labels and format the tooltip#
+unemplPlot$yAxis(axisLabel = "Youth (15-24) unemployement in %", width = 62)#
+unemplPlot$xAxis(axisLabel = "Year")#
+unemplPlot$chart(tooltipContent = "#! function(key, x, y){#
+      return '<h3>' + key + '</h3>' +#
+      '<p>' + y + ' in ' + x + '</p>'#
+      } !#")#
+unemplPlot#
+unemplPlot$publish("line chart WB youth unemployment", "rpubs")#
+ids <- unique(unempl$iso2c)#
+country.selec <- as.logical(!ids %in% c('AT','CH'))#
+unemplPlot$set(disabled = country.selec)#
+unemplPlot
