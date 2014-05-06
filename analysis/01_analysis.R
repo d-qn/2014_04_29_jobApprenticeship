@@ -106,16 +106,59 @@ tertPlot2 <- nPlot(
 	type = "lineChart")
 
 # Add axis labels and format the tooltip
-tertPlot2$yAxis(axisLabel = "Tertiary education enrollement in % 5 years from secondary school leaving", width = 62)
+tertPlot2$yAxis(axisLabel = "Tertiary education enrollement 5 years from secondary school leaving [%]", width = 62)
 tertPlot2$xAxis(axisLabel = "Year")
 tertPlot2$chart(tooltipContent = "#! function(key, x, y){
     return '<h3>' + key + '</h3>' +
     '<p>' + y + ' in ' + x + '</p>'
     } !#")
-tertPlot2
+#tertPlot2
+tertPlot2$publish("line chart World Bank youth tiertary education", host = "rpubs")
 
 
 ############################################################################################
-###  3 - evolution of the tertiary education over time
+###  4 - tertiary education vs NEET
 ############################################################################################
 
+eduneet.data <- read.csv("data/eduAttainment_NEET-refined-csv.csv")
+eduneet.data$value <- as.numeric(as.character(eduneet.data$value))
+eduneet.data$NEET <- as.numeric(as.character(eduneet.data$NEET))
+
+
+countries.iso3 <- c('AUT', 'FRA', 'DEU', 'GRC', 'ITA', 'JPN', 'PRT', 'ESP', 'CHE', 'USA', 'BRA','UKM')
+
+eduneet <- eduneet.data[eduneet.data$ISO3 %in% countries.iso3 & eduneet.data$year == 2011,]
+tertvsneet<- cbind(eduneet[eduneet$Educational.attainment=='Tertiary education',c('Country', 'ISO3', 'value')],
+	NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'], size = 10)
+
+secondvsneet<- cbind(eduneet[eduneet$Educational.attainment=='Upper secondary or post-secondary non-tertiary',c('Country', 'ISO3', 'value')],
+	NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'], size = 10)
+
+
+print(ggplot(tertvsneet, aes(x = NEET, y = value, label = Country)) +
+  geom_point() + geom_text(aes(label = Country), hjust=0, vjust=0, size = 3, alpha = 0.5) + ggtheme_ygrid)
+
+print(ggplot(secondvsneet, aes(x = NEET, y = value, label = Country)) +
+	geom_point() + geom_text(aes(label = Country), hjust=0, vjust=0, size = 3, alpha = 0.5) + ggtheme_ygrid)
+
+
+# tertvsneetPlot <- nPlot(value ~ NEET, group = 'Country', data = tertvsneet, type = 'scatterChart')
+# tertvsneetPlot$chart(size = '#! function(d){return d.size} !#',
+# 	tooltipContent = "#! function(key, x, y){
+#       return '<h3>' + key + '</h3>' +
+#       '<p>' + y + ' in ' + x + '</p>'
+#       } !#")
+# tertvsneetPlot$yAxis(axisLabel = 'Youth (age 25-34) with tertiary education [%]')
+# tertvsneetPlot$xAxis(axisLabel = 'Youth effective unemployment (age 20-24) neither employed nor in education or training [%]')
+# tertvsneetPlot$chart(showControls = FALSE)
+#
+# ids <- unique(tertvsneet$ISO3)
+# country.selec3 <- as.logical(!ids %in% c('AUT','CHE','DEU','ESP','PRT','UKM'))
+# tertvsneetPlot$set(disabled = country.selec3)
+# tertvsneetPlot
+# tertvsneetPlot$publish("scatter chart OECD youth unemployment vs tertiery education", host = "rpubs")
+
+
+############################################################################################
+###  4 - tertiary education vs NEET
+############################################################################################
