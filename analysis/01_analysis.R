@@ -3,6 +3,8 @@
 ############################################################################################
 
 source("~/swissinfo/_helpers/helpers.R")
+font <- "Archivo Narrow"
+
 
 ############################################################################################
 ###  1 - Time series unemployement chart
@@ -39,14 +41,11 @@ unemplPlot$chart(tooltipContent = "#! function(key, x, y){
       return '<h3>' + key + '</h3>' +
       '<p>' + y + ' in ' + x + '</p>'
       } !#")
-unemplPlot
-
-
-
 ids <- unique(unempl$iso2c)
 country.selec <- as.logical(!ids %in% c('AT','CH','DE','ES','PT','GB'))
 unemplPlot$set(disabled = country.selec)
 unemplPlot$publish("line chart World Bank youth unemployment", host = "rpubs")
+unemplPlot
 
 
 ############################################################################################
@@ -121,25 +120,65 @@ tertPlot2$publish("line chart World Bank youth tiertary education", host = "rpub
 ############################################################################################
 
 eduneet.data <- read.csv("data/eduAttainment_NEET-refined-csv.csv")
+country2regions <- read.csv("~/swissinfo/_helpers/country-regions.csv")
+
 eduneet.data$value <- as.numeric(as.character(eduneet.data$value))
 eduneet.data$NEET <- as.numeric(as.character(eduneet.data$NEET))
 
 
 countries.iso3 <- c('AUT', 'FRA', 'DEU', 'GRC', 'ITA', 'JPN', 'PRT', 'ESP', 'CHE', 'USA', 'BRA','UKM')
+names(countries.iso3) <- ifelse(country2regions[match(countries.iso3, country2regions[,1]), 2] == 'ECS' |
+	is.na(country2regions[match(countries.iso3, country2regions[,1]), 2]), 'EU', 'non-EU')
 
 eduneet <- eduneet.data[eduneet.data$ISO3 %in% countries.iso3 & eduneet.data$year == 2011,]
-tertvsneet<- cbind(eduneet[eduneet$Educational.attainment=='Tertiary education',c('Country', 'ISO3', 'value')],
-	NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'], size = 10)
 
-secondvsneet<- cbind(eduneet[eduneet$Educational.attainment=='Upper secondary or post-secondary non-tertiary',c('Country', 'ISO3', 'value')],
-	NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'], size = 10)
+eduneet$Educational.attainment <- reorder(eduneet$Educational.attainment,
+	match(eduneet$Educational.attainment, unique(as.character(eduneet$Educational.attainment))))
 
 
-print(ggplot(tertvsneet, aes(x = NEET, y = value, label = Country)) +
-  geom_point() + geom_text(aes(label = Country), hjust=0, vjust=0, size = 3, alpha = 0.5) + ggtheme_ygrid)
+myreshape <- function(eduneet, eduLevels =
+	as.character(unique(eduneet$Educational.attainment)[unique(eduneet$Educational.attainment) != "Total"])) {
 
-print(ggplot(secondvsneet, aes(x = NEET, y = value, label = Country)) +
-	geom_point() + geom_text(aes(label = Country), hjust=0, vjust=0, size = 3, alpha = 0.5) + ggtheme_ygrid)
+		do.call(rbind, lapply(eduLevels, function(ed) {
+			temp <- cbind(eduneet[eduneet$Educational.attainment==ed, c('Country', 'ISO3', 'Educational.attainment', 'value')],
+				NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'])
+			cbind(temp, region = names(countries.iso3)[match(temp$ISO3,countries.iso3)])
+		}))
+}
+xlabel <- "% of 15-29 year-olds neither in employment nor in education or training (NEET)"
+eduneet2 <- myreshape(eduneet)
+pdf("eduVsneetByEduLevel.pdf", width = 13, height = 10, family = font)
+ggplot(eduneet2, aes(x = NEET, y = value, label = Country, group = region)) +
+  geom_point(size = 4, alpha = 0.7, aes(color = region, shape = `Educational.attainment`)) + geom_text(aes(label = Country), hjust=0, vjust=0, size = 3, alpha = 0.8) +
+  ggtheme_ygrid + ylab("% of 25-34 year-olds who attained that level of education") + xlab(xlabel)  + ggtitle("Youth unemployment (NEET) vs education level by country") +
+  facet_wrap (~ `Educational.attainment`) + theme(legend.position = "none", panel.border = element_rect(linetype = "dashed", colour = "grey"))
+
+# ggplot(eduneet2, aes(x = NEET, y = value, label = Country, group = region)) +
+# 	geom_point(size = 3, alpha = 0.8, aes(color = region)) + geom_text(aes(label = Country), hjust=0, vjust=0, size = 2, alpha = 0.8) +
+# 	ggtheme_ygrid + ylab("% of 25-34 year-olds who attained that level of education") + xlab(xlabel)  +
+# 	facet_wrap (~ `Educational.attainment`, nrow = 3) + theme(legend.position = "none", panel.border = element_blank())
+
+dev.off()
+
+
+
+# tertvsneet <- cbind(eduneet[eduneet$Educational.attainment=='Tertiary education', c('Country', 'ISO3', 'value')],
+# 	NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'])
+# tertvsneet <- cbind(tertvsneet, region = names(countries.iso3)[match(tertvsneet$ISO3,countries.iso3)])
+#
+# secondvsneet<- cbind(eduneet[eduneet$Educational.attainment=='Upper secondary or post-secondary non-tertiary',c('Country', 'ISO3', 'value')],
+# 	NEET = eduneet[eduneet$Educational.attainment=='Total','NEET'])
+# secondvsneet <- cbind(secondvsneet, region = names(countries.iso3)[match(secondvsneet$ISO3,countries.iso3)])
+#
+# #ylabel <- "25-34 year"
+#
+# ggplot(tertvsneet, aes(x = NEET, y = value, label = Country, group = region)) +
+#   geom_point(size = 5, alpha = 0.8, aes(color = region)) + geom_text(aes(label = Country), hjust=0, vjust=0, size = 2, alpha = 0.4) +
+#   ggtheme_ygrid + ylab("% of 25-34 year-olds who attained tertiarty education") + xlab(xlabel)
+#
+# ggplot(secondvsneet, aes(x = NEET, y = value, label = Country, group = region)) +
+# 	geom_point(size = 5, alpha = 0.8, aes(color = region)) + geom_text(aes(label = Country), hjust=0, vjust=0, size = 2, alpha = 0.4) +
+# 	ggtheme_ygrid + ylab("% of 25-34 year-olds who attained Upper secondary (non-tertiary) education") + xlab(xlabel)
 
 
 # tertvsneetPlot <- nPlot(value ~ NEET, group = 'Country', data = tertvsneet, type = 'scatterChart')
@@ -160,5 +199,13 @@ print(ggplot(secondvsneet, aes(x = NEET, y = value, label = Country)) +
 
 
 ############################################################################################
-###  4 - tertiary education vs NEET
+###  5 - detailed eduction level vs unemployment
 ############################################################################################
+
+#eduneet.sub <- reshape(eduneet, v.names = "Educational.attainment",  idvar = "Country", timevar = "year", direction = "wide")
+neet <- eduneet
+neet$edu <- reorder(eduneet$Educational.attainment,
+	match(eduneet$Educational.attainment, unique(as.character(eduneet$Educational.attainment))))
+
+ggplot(neet, aes(`edu`, NEET, fill = edu)) + geom_bar(width = 0.8) + facet_wrap (~ Country) + xlab("") +
+	ggtheme_ygrid + theme(axis.text.x = element_blank(),  axis.ticks.x = element_blank())
